@@ -1,3 +1,4 @@
+import { LogOut } from 'lucide-react';
 import {
   LayoutDashboard,
   Gauge,
@@ -9,6 +10,7 @@ import {
   History,
   Wifi,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import type { ViewKey } from '@/types';
 import { PulseDot } from './Loaders';
 
@@ -27,6 +29,9 @@ const NAV_ITEMS: { key: ViewKey; label: string; icon: React.ReactNode; desc: str
   { key: 'info', label: 'Network Info', icon: <NetworkIcon size={18} />, desc: 'IP & Gateway' },
   { key: 'history', label: 'History', icon: <History size={18} />, desc: 'Past Results' },
 ];
+const handleLogout = async () => {
+  await supabase.auth.signOut();
+};
 
 export function Sidebar({ current, onNavigate }: SidebarProps) {
   return (
@@ -79,6 +84,15 @@ export function Sidebar({ current, onNavigate }: SidebarProps) {
       </nav>
 
       {/* Status footer */}
+      <div className="mt-auto border-t border-slate-200 dark:border-slate-800 p-3">
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-400"
+          >
+          <LogOut size={18} />
+          <span>Logout</span>
+        </button>
+      </div>
       <div className="border-t border-slate-200 px-5 py-4 dark:border-slate-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -89,5 +103,6 @@ export function Sidebar({ current, onNavigate }: SidebarProps) {
         </div>
       </div>
     </aside>
+      
   );
 }

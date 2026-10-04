@@ -85,7 +85,9 @@ export async function runPing(
 
   try {
     const response = await fetch(
-      `http://127.0.0.1:8000/api/ping?host=${encodeURIComponent(cleanHost)}&count=${count}`
+      `http://127.0.0.1:8000/api/ping?host=${encodeURIComponent(
+        cleanHost
+      )}&count=${count}`
     );
 
     if (!response.ok) {
@@ -95,15 +97,16 @@ export async function runPing(
     const data = await response.json();
     const output = String(data.output || '');
 
-    // Example:
-    // Reply from 1.1.1.1: bytes=32 time=61ms TTL=55
+    // Extract latency values:
+    // Windows: time=35ms
+    // Linux:   time=35.2 ms
     const latencies = Array.from(
       output.matchAll(/time[=<]\s*(\d+(?:\.\d+)?)\s*ms/gi),
       (match) => Math.round(Number(match[1]))
     );
 
-    // Example:
-    // Lost = 1 (25% loss)
+    // Extract packet loss:
+    // Lost = 0 (0% loss)
     const lossMatch = output.match(
       /Lost\s*=\s*(\d+)\s*\((\d+(?:\.\d+)?)%\s*loss\)/i
     );
@@ -114,7 +117,8 @@ export async function runPing(
 
     onProgress?.([...latencies], lost);
 
-    // Windows ping statistics
+    // Windows:
+    // Minimum = 35ms, Maximum = 61ms, Average = 44ms
     const statsMatch = output.match(
       /Minimum\s*=\s*(\d+)ms,\s*Maximum\s*=\s*(\d+)ms,\s*Average\s*=\s*(\d+)ms/i
     );
@@ -185,6 +189,7 @@ export async function runPing(
     };
   }
 }
+
 
 // Speed test endpoints — user can choose which server to test against
 export const SPEED_SERVERS = [

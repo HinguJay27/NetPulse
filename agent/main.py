@@ -42,7 +42,6 @@ def health():
 # ---------------------------------------------------------
 # PING
 # ---------------------------------------------------------
-
 @app.get("/api/ping")
 def ping(host: str = "1.1.1.1", count: int = 4):
 
@@ -63,7 +62,10 @@ def ping(host: str = "1.1.1.1", count: int = 4):
             timeout=30
         )
 
-        elapsed = round((time.perf_counter() - start) * 1000, 2)
+        elapsed = round(
+            (time.perf_counter() - start) * 1000,
+            2
+        )
 
         return {
             "host": host,
@@ -71,6 +73,15 @@ def ping(host: str = "1.1.1.1", count: int = 4):
             "elapsed_ms": elapsed,
             "output": result.stdout,
             "error": result.stderr,
+        }
+
+    except FileNotFoundError:
+        return {
+            "host": host,
+            "success": False,
+            "elapsed_ms": None,
+            "output": "",
+            "error": "Ping command is not available on this server.",
         }
 
     except subprocess.TimeoutExpired:
@@ -82,6 +93,14 @@ def ping(host: str = "1.1.1.1", count: int = 4):
             "error": "Ping timed out",
         }
 
+    except Exception as e:
+        return {
+            "host": host,
+            "success": False,
+            "elapsed_ms": None,
+            "output": "",
+            "error": str(e),
+        }
 
 # ---------------------------------------------------------
 # DNS

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { History, Trash2, TrendingUp, TrendingDown, Activity, Globe } from 'lucide-react';
 import {
   LineChart,
@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import type { HistoryRecord } from '@/types';
 import { loadHistory, clearHistory } from '@/lib/storage';
+import { supabase } from '@/lib/supabase';
 import { formatSpeed, formatDateTime } from '@/lib/utils';
 import { Button } from '@/components/ui';
 
@@ -21,6 +22,33 @@ type ChartTab = 'speed' | 'latency' | 'loss' | 'dns';
 
 export function HistoryView() {
   const [records, setRecords] = useState<HistoryRecord[]>(() => loadHistory().reverse());
+
+  useEffect(() => {
+    const loadCloudHistory = async () => {
+      const { data, error } = await supabase
+        .from('network_tests')
+        .select('result')
+        .eq('test_type', 'network-summary')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Supabase history load failed:', error);
+        return;
+      }
+
+      if (data) {
+        const cloudRecords = data
+          .map((row) => row.result as HistoryRecord)
+          .filter(Boolean);
+
+        setRecords(cloudRecords);
+      }
+    };
+
+    loadCloudHistory();
+  }, []);
+
+
   const [tab, setTab] = useState<ChartTab>('speed');
 
   const sorted = useMemo(() => [...records].sort((a, b) => a.timestamp - b.timestamp), [records]);

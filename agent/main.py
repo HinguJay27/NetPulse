@@ -81,7 +81,7 @@ def ping(host: str = "1.1.1.1", count: int = 4):
             "success": False,
             "elapsed_ms": None,
             "output": "",
-            "error": "Ping command is not available on this server.",
+            "error": "Ping command is not available on this server."
         }
 
     except subprocess.TimeoutExpired:
@@ -90,7 +90,7 @@ def ping(host: str = "1.1.1.1", count: int = 4):
             "success": False,
             "elapsed_ms": None,
             "output": "",
-            "error": "Ping timed out",
+            "error": "Ping timed out"
         }
 
     except Exception as e:
@@ -99,9 +99,8 @@ def ping(host: str = "1.1.1.1", count: int = 4):
             "success": False,
             "elapsed_ms": None,
             "output": "",
-            "error": str(e),
+            "error": str(e)
         }
-
 # ---------------------------------------------------------
 # DNS
 # ---------------------------------------------------------

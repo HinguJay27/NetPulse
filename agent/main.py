@@ -44,15 +44,16 @@ def health():
 # ---------------------------------------------------------
 @app.get("/api/ping")
 def ping(host: str = "1.1.1.1", count: int = 4):
+    import socket
+    import time
 
+    # Try normal system ping first
     system = platform.system().lower()
 
     if system == "windows":
         command = ["ping", "-n", str(count), host]
     else:
         command = ["ping", "-c", str(count), host]
-
-    start = time.perf_counter()
 
     try:
         result = subprocess.run(
@@ -62,26 +63,56 @@ def ping(host: str = "1.1.1.1", count: int = 4):
             timeout=30
         )
 
-        elapsed = round(
-            (time.perf_counter() - start) * 1000,
-            2
-        )
-
         return {
             "host": host,
             "success": result.returncode == 0,
-            "elapsed_ms": elapsed,
+            "elapsed_ms": None,
             "output": result.stdout,
             "error": result.stderr,
         }
 
     except FileNotFoundError:
+        # Render/Linux fallback: TCP latency test
+        times = []
+        output_lines = []
+
+        for i in range(count):
+            start = time.perf_counter()
+
+            try:
+                with socket.create_connection((host, 443), timeout=5):
+                    latency = round(
+                        (time.perf_counter() - start) * 1000,
+                        2
+                    )
+
+                    times.append(latency)
+                    output_lines.append(
+                        f"Reply from {host}: time={latency}ms"
+                    )
+
+            except Exception as e:
+                output_lines.append(
+                    f"Request timed out for {host}: {e}"
+                )
+
+        if times:
+            output = "\n".join(output_lines)
+
+            return {
+                "host": host,
+                "success": True,
+                "elapsed_ms": round(sum(times) / len(times), 2),
+                "output": output,
+                "error": "",
+            }
+
         return {
             "host": host,
             "success": False,
             "elapsed_ms": None,
-            "output": "",
-            "error": "Ping command is not available on this server."
+            "output": "\n".join(output_lines),
+            "error": "Unable to connect to host.",
         }
 
     except subprocess.TimeoutExpired:
@@ -90,7 +121,7 @@ def ping(host: str = "1.1.1.1", count: int = 4):
             "success": False,
             "elapsed_ms": None,
             "output": "",
-            "error": "Ping timed out"
+            "error": "Ping timed out",
         }
 
     except Exception as e:
@@ -99,7 +130,7 @@ def ping(host: str = "1.1.1.1", count: int = 4):
             "success": False,
             "elapsed_ms": None,
             "output": "",
-            "error": str(e)
+            "error": str(e),
         }
 # ---------------------------------------------------------
 # DNS
